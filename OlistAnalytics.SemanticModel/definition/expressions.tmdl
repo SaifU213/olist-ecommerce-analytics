@@ -1,0 +1,12 @@
+/// PostgreSQL server as host:port (docker-compose.yml publishes 5434).
+expression PgServer = "localhost:5434" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: 7ce8ac5a-8974-51d4-ad15-ca9a8a6a3d0a
+
+	annotation PBI_ResultType = Text
+
+/// Warehouse database created by etl/load_warehouse.py.
+expression PgDatabase = "olist" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	lineageTag: c6239927-e305-57b4-ae15-6a52a7fafb73
+
+	annotation PBI_ResultType = Text
+

@@ -1,0 +1,98 @@
+/// Product catalogue with English category names (dw.dim_product).
+table Products
+	lineageTag: 580b43ae-39cd-54b1-b1ce-4a34082a4a81
+
+	column 'Product ID'
+		dataType: string
+		isKey
+		lineageTag: f67492d7-6484-5646-9c34-27f90c416247
+		summarizeBy: none
+		sourceColumn: Product ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Category PT'
+		dataType: string
+		isHidden
+		lineageTag: 41edc3dc-309b-5cf4-8d5d-cfb138a4ffee
+		summarizeBy: none
+		sourceColumn: Category PT
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 258c0883-48af-5183-93f0-809d1e4d1378
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Name Length'
+		dataType: int64
+		lineageTag: 48e7cc34-aa62-5466-ae07-85759510ac47
+		summarizeBy: none
+		sourceColumn: Name Length
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Description Length'
+		dataType: int64
+		lineageTag: a221004e-44d2-5c82-af56-3e24945debd2
+		summarizeBy: none
+		sourceColumn: Description Length
+
+		annotation SummarizationSetBy = Automatic
+
+	column Photos
+		dataType: int64
+		lineageTag: 2c448778-e6d4-5e3e-b486-6c020a267979
+		summarizeBy: none
+		sourceColumn: Photos
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weight (g)'
+		dataType: int64
+		lineageTag: 29164f63-c904-595f-a7db-e176d9041e01
+		summarizeBy: none
+		sourceColumn: Weight (g)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Length (cm)'
+		dataType: int64
+		lineageTag: fb849414-6e7c-5adc-8457-3a223ec8c815
+		summarizeBy: none
+		sourceColumn: Length (cm)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Height (cm)'
+		dataType: int64
+		lineageTag: e260b318-fe7e-516d-8eb5-550014a77900
+		summarizeBy: none
+		sourceColumn: Height (cm)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Width (cm)'
+		dataType: int64
+		lineageTag: 150008e0-6a53-5e93-a233-f497ba8172ee
+		summarizeBy: none
+		sourceColumn: Width (cm)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Products = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "dim_product"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"product_id", "category_pt", "category", "name_length", "description_length", "photos", "weight_g", "length_cm", "height_cm", "width_cm"}),
+				    Renamed = Table.RenameColumns(Selected, {{"product_id", "Product ID"}, {"category_pt", "Category PT"}, {"category", "Category"}, {"name_length", "Name Length"}, {"description_length", "Description Length"}, {"photos", "Photos"}, {"weight_g", "Weight (g)"}, {"length_cm", "Length (cm)"}, {"height_cm", "Height (cm)"}, {"width_cm", "Width (cm)"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Product ID", type text}, {"Category PT", type text}, {"Category", type text}, {"Name Length", Int64.Type}, {"Description Length", Int64.Type}, {"Photos", Int64.Type}, {"Weight (g)", Int64.Type}, {"Length (cm)", Int64.Type}, {"Height (cm)", Int64.Type}, {"Width (cm)", Int64.Type}})
+				in
+				    Typed
+

@@ -1,0 +1,19 @@
+# Extracted CSVs (re-create by unzipping archive.zip into data/, or just run the ETL)
+data/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local overrides (e.g. OLIST_PG_PASSWORD)
+.env
+
+# Power BI Desktop local/cache files
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Large/binary artifacts kept local only
+archive.zip
+OlistAnalytics.pdf

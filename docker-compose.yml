@@ -1,0 +1,26 @@
+# Local PostgreSQL for the Olist warehouse.
+#   docker compose up -d
+# Port 5434 avoids clashing with a locally installed Postgres on 5432/5433.
+# The password is a throwaway for a local, single-user database; override it
+# with OLIST_PG_PASSWORD in your shell or a .env file if you prefer.
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: olist-postgres
+    environment:
+      POSTGRES_USER: olist
+      POSTGRES_PASSWORD: ${OLIST_PG_PASSWORD:-olist_local}
+      POSTGRES_DB: olist
+    ports:
+      - "5434:5432"
+    volumes:
+      - olist-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olist -d olist"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  olist-pgdata:

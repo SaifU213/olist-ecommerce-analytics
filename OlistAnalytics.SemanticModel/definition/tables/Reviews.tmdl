@@ -1,0 +1,93 @@
+/// Customer reviews (dw.fact_reviews). review_id is NOT unique in the source.
+table Reviews
+	lineageTag: 93e27bd5-21b3-51a3-8bed-02f420cf48a0
+
+	column 'Review ID'
+		dataType: string
+		lineageTag: 801fe02c-1dff-531b-bf53-56af8f5c596f
+		summarizeBy: none
+		sourceColumn: Review ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order ID'
+		dataType: string
+		isHidden
+		lineageTag: 39332b0c-41a3-5c7a-b635-470b81231b66
+		summarizeBy: none
+		sourceColumn: Order ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Review Score'
+		dataType: int64
+		lineageTag: 06f1a026-c251-561c-9d06-2ccc75f7073f
+		summarizeBy: none
+		sourceColumn: Review Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Comment Title'
+		dataType: string
+		lineageTag: 91d84898-42e6-5bad-bb5e-aacb4d8f485c
+		summarizeBy: none
+		sourceColumn: Comment Title
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Comment Message'
+		dataType: string
+		lineageTag: cc66b34b-b44b-5584-9272-267c586a8081
+		summarizeBy: none
+		sourceColumn: Comment Message
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Review Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: d5eaa17c-4ff6-5cf1-a035-11ef4f42574d
+		summarizeBy: none
+		sourceColumn: Review Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Answer Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: 561ca29d-c291-51e2-933e-f3313167509e
+		summarizeBy: none
+		sourceColumn: Answer Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sentiment
+		dataType: string
+		lineageTag: f8a215c2-216f-5cad-b817-cc885f578c6b
+		summarizeBy: none
+		sourceColumn: Sentiment
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Has Comment'
+		dataType: boolean
+		lineageTag: 4368a4c1-0aa6-5c38-a4d1-aa0889697483
+		summarizeBy: none
+		sourceColumn: Has Comment
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Reviews = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "fact_reviews"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"review_id", "order_id", "review_score", "comment_title", "comment_message", "review_date", "answer_ts", "sentiment", "has_comment"}),
+				    Renamed = Table.RenameColumns(Selected, {{"review_id", "Review ID"}, {"order_id", "Order ID"}, {"review_score", "Review Score"}, {"comment_title", "Comment Title"}, {"comment_message", "Comment Message"}, {"review_date", "Review Date"}, {"answer_ts", "Answer Timestamp"}, {"sentiment", "Sentiment"}, {"has_comment", "Has Comment"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Review ID", type text}, {"Order ID", type text}, {"Review Score", Int64.Type}, {"Comment Title", type text}, {"Comment Message", type text}, {"Review Date", type date}, {"Answer Timestamp", type datetime}, {"Sentiment", type text}, {"Has Comment", type logical}})
+				in
+				    Typed
+

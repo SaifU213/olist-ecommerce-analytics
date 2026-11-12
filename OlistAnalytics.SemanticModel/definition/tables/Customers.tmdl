@@ -1,0 +1,87 @@
+/// One row per customer_id, i.e. per order (dw.dim_customer). Use Customer Unique ID for real people.
+table Customers
+	lineageTag: d7251741-f979-5611-b4e3-95f7ef364719
+
+	column 'Customer ID'
+		dataType: string
+		isHidden
+		isKey
+		lineageTag: a4acf6ae-135c-5fb7-8912-b668c213ee33
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Unique ID'
+		dataType: string
+		lineageTag: f3fea9b3-d8a0-5071-ad79-ca2439913f84
+		summarizeBy: none
+		sourceColumn: Customer Unique ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Zip Code Prefix'
+		dataType: string
+		lineageTag: 816459ca-bbc8-5fbd-ac82-d53107286b3e
+		dataCategory: PostalCode
+		summarizeBy: none
+		sourceColumn: Zip Code Prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: acd8803a-a03d-58f2-8c15-53a5af217a49
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: 3956e77c-012d-588b-b671-8097594c526f
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 002280d8-f200-54bc-afb9-033096a5e8c4
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latitude
+		dataType: double
+		lineageTag: 901d7654-7ba5-573c-ae29-a8339b8c2448
+		dataCategory: Latitude
+		summarizeBy: none
+		sourceColumn: Latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Longitude
+		dataType: double
+		lineageTag: 171ff645-f908-59b5-93aa-934703e23205
+		dataCategory: Longitude
+		summarizeBy: none
+		sourceColumn: Longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Customers = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "dim_customer"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"customer_id", "customer_unique_id", "zip_code_prefix", "city", "state", "region", "latitude", "longitude"}),
+				    Renamed = Table.RenameColumns(Selected, {{"customer_id", "Customer ID"}, {"customer_unique_id", "Customer Unique ID"}, {"zip_code_prefix", "Zip Code Prefix"}, {"city", "City"}, {"state", "State"}, {"region", "Region"}, {"latitude", "Latitude"}, {"longitude", "Longitude"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Customer ID", type text}, {"Customer Unique ID", type text}, {"Zip Code Prefix", type text}, {"City", type text}, {"State", type text}, {"Region", type text}, {"Latitude", type number}, {"Longitude", type number}})
+				in
+				    Typed
+

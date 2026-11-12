@@ -1,0 +1,58 @@
+/// One row per payment record of an order (dw.fact_payments).
+table Payments
+	lineageTag: d5467530-5206-52b2-8249-20733109dab2
+
+	column 'Order ID'
+		dataType: string
+		isHidden
+		lineageTag: 525ad35b-8024-524a-b030-f5ee4cece6f9
+		summarizeBy: none
+		sourceColumn: Order ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Payment Seq'
+		dataType: int64
+		lineageTag: 52a1a41e-f814-5c85-bdc9-a7b0a764812c
+		summarizeBy: none
+		sourceColumn: Payment Seq
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Payment Type'
+		dataType: string
+		lineageTag: 0bc794df-442b-5f10-a901-41e7c42c8b66
+		summarizeBy: none
+		sourceColumn: Payment Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Installments
+		dataType: int64
+		lineageTag: cf072cfe-3c4b-5586-a7bd-2b9fa7970ace
+		summarizeBy: average
+		sourceColumn: Installments
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Payment Value'
+		dataType: decimal
+		formatString: \R$#,0.00
+		lineageTag: fa27ea52-3676-5035-a755-4cb16fbe5f77
+		summarizeBy: sum
+		sourceColumn: Payment Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Payments = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "fact_payments"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"order_id", "payment_seq", "payment_type", "installments", "payment_value"}),
+				    Renamed = Table.RenameColumns(Selected, {{"order_id", "Order ID"}, {"payment_seq", "Payment Seq"}, {"payment_type", "Payment Type"}, {"installments", "Installments"}, {"payment_value", "Payment Value"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Order ID", type text}, {"Payment Seq", Int64.Type}, {"Payment Type", type text}, {"Installments", Int64.Type}, {"Payment Value", Currency.Type}})
+				in
+				    Typed
+

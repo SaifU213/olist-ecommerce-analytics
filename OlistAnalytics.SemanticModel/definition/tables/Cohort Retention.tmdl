@@ -1,0 +1,74 @@
+/// Monthly acquisition cohorts, months 1-12 after first purchase (analytics.cohort_retention).
+table 'Cohort Retention'
+	lineageTag: 369c811a-de20-58ad-b7db-06353e084bec
+
+	column 'Cohort Month'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: f6aa2084-8ce1-554c-9e40-837bb092ba05
+		summarizeBy: none
+		sourceColumn: Cohort Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Cohort
+		dataType: string
+		lineageTag: 8507ce64-da89-55e3-acb3-635bde8690af
+		summarizeBy: none
+		sourceColumn: Cohort
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Months Since First'
+		dataType: int64
+		lineageTag: 73811520-739a-5692-b3b8-62f2c88693e7
+		summarizeBy: none
+		sourceColumn: Months Since First
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cohort Size'
+		dataType: int64
+		lineageTag: fc2e88da-4e55-5baa-8657-5c96e4882526
+		summarizeBy: sum
+		sourceColumn: Cohort Size
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Active Customers'
+		dataType: int64
+		lineageTag: e00dc041-49e0-5ad5-ab9b-9d7d2f98f72e
+		summarizeBy: sum
+		sourceColumn: Active Customers
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention Rate'
+		dataType: double
+		isHidden
+		formatString: 0.00%
+		lineageTag: 00e46eec-6efd-5e9e-b953-2f185bac7385
+		summarizeBy: none
+		sourceColumn: Retention Rate
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Cohort Retention' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "analytics", Item = "cohort_retention"]}[Data],
+				    // months 1-12 only; skip the tiny 2016 cohorts and any cell that falls after Aug 2018, the last complete month of data
+				    Filtered = Table.SelectRows(Data, each [months_since_first] >= 1 and [months_since_first] <= 12
+				        and [cohort_month] >= #date(2017, 1, 1)
+				        and Date.AddMonths([cohort_month], [months_since_first]) <= #date(2018, 8, 1)),
+				    Selected = Table.SelectColumns(Filtered, {"cohort_month", "cohort", "months_since_first", "cohort_size", "active_customers", "retention_rate"}),
+				    Renamed = Table.RenameColumns(Selected, {{"cohort_month", "Cohort Month"}, {"cohort", "Cohort"}, {"months_since_first", "Months Since First"}, {"cohort_size", "Cohort Size"}, {"active_customers", "Active Customers"}, {"retention_rate", "Retention Rate"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Cohort Month", type date}, {"Cohort", type text}, {"Months Since First", Int64.Type}, {"Cohort Size", Int64.Type}, {"Active Customers", Int64.Type}, {"Retention Rate", type number}})
+				in
+				    Typed
+

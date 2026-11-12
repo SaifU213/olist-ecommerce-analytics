@@ -1,0 +1,32 @@
+relationship 55586a6c-8285-530a-91af-b77b36918658
+	fromColumn: Orders.'Customer Unique ID'
+	toColumn: 'Customer Segments'.'Customer Unique ID'
+
+relationship 7a02e76d-73c7-57d7-96a1-77c3c68214de
+	fromColumn: 'Order Items'.'Order ID'
+	toColumn: Orders.'Order ID'
+
+relationship 7a8aff59-5b8b-598c-8f0b-af1e702a6de4
+	fromColumn: 'Order Items'.'Product ID'
+	toColumn: Products.'Product ID'
+
+relationship 464507b0-ce19-5e33-9435-695c79917201
+	fromColumn: 'Order Items'.'Seller ID'
+	toColumn: Sellers.'Seller ID'
+
+relationship e28ff853-1dd3-52c3-aa8d-9860c39f10a1
+	fromColumn: Orders.'Customer ID'
+	toColumn: Customers.'Customer ID'
+
+relationship b4e95292-c650-59e9-a265-b3166688302d
+	fromColumn: Orders.'Purchase Date'
+	toColumn: Date.Date
+
+relationship c8cf39e2-3f56-5cd7-9251-59e61687da8b
+	fromColumn: Payments.'Order ID'
+	toColumn: Orders.'Order ID'
+
+relationship e5e9fb30-ab5f-507e-a980-e7aed982195d
+	fromColumn: Reviews.'Order ID'
+	toColumn: Orders.'Order ID'
+

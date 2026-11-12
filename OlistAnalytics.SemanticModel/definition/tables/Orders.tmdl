@@ -1,0 +1,160 @@
+/// One row per order (dw.fact_orders). Delivery metrics and customer order sequence are computed in SQL.
+table Orders
+	lineageTag: 6d0173b3-54f0-59f6-a5f8-1da8adddb92c
+
+	column 'Order ID'
+		dataType: string
+		isKey
+		lineageTag: 1542a845-e005-594b-b55b-4e11127435b9
+		summarizeBy: none
+		sourceColumn: Order ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer ID'
+		dataType: string
+		isHidden
+		lineageTag: 6cb35e7b-671b-5fe5-9123-790343875913
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Unique ID'
+		dataType: string
+		lineageTag: fe915fcd-a7a0-57f6-9497-71d1c5c79971
+		summarizeBy: none
+		sourceColumn: Customer Unique ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Status'
+		dataType: string
+		lineageTag: a2997227-d375-536c-b9c0-29d90cc468ab
+		summarizeBy: none
+		sourceColumn: Order Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Purchase Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: fdc9bb01-1e84-588a-98b5-c1b7db642770
+		summarizeBy: none
+		sourceColumn: Purchase Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Approved Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: 107299c6-4028-5ff5-ac53-c456a91a6e87
+		summarizeBy: none
+		sourceColumn: Approved Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Carrier Handoff Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: c4950f7f-4248-5314-849a-00c06ca80e30
+		summarizeBy: none
+		sourceColumn: Carrier Handoff Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Delivered Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: d1b6acda-8b30-529a-a53f-6b231b00252f
+		summarizeBy: none
+		sourceColumn: Delivered Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Estimated Delivery Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 80103115-3902-534c-a173-44d50b8586f2
+		summarizeBy: none
+		sourceColumn: Estimated Delivery Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Purchase Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 3d7a9819-43ca-5fb6-bb94-cbf337422b3e
+		summarizeBy: none
+		sourceColumn: Purchase Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Delivery Days'
+		dataType: double
+		formatString: 0.0
+		lineageTag: 1470a105-3ba8-5773-afdd-0e08da6acae5
+		summarizeBy: average
+		sourceColumn: Delivery Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days vs Estimate'
+		dataType: int64
+		lineageTag: be9be760-7d86-5344-91f6-167a3b0f2397
+		summarizeBy: average
+		sourceColumn: Days vs Estimate
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Delivery Status'
+		dataType: string
+		lineageTag: ca342a4a-dfd4-5808-92fc-d1bdf3f3e4f9
+		summarizeBy: none
+		sourceColumn: Delivery Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Is Late'
+		dataType: boolean
+		lineageTag: b93498cd-f084-58db-a71e-2ae2bd88c747
+		summarizeBy: none
+		sourceColumn: Is Late
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Order Seq'
+		dataType: int64
+		lineageTag: 0ae921ef-ee80-5cd2-b618-932bdd8a84cd
+		summarizeBy: none
+		sourceColumn: Customer Order Seq
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Type'
+		dataType: string
+		lineageTag: 08527b83-ccf1-58b8-abd6-67bb3a0d6f22
+		summarizeBy: none
+		sourceColumn: Customer Type
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Orders = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "fact_orders"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"order_id", "customer_id", "customer_unique_id", "order_status", "purchase_ts", "approved_ts", "carrier_handoff_ts", "delivered_ts", "estimated_delivery_date", "purchase_date", "delivery_days", "days_vs_estimate", "delivery_status", "is_late", "customer_order_seq", "customer_type"}),
+				    Renamed = Table.RenameColumns(Selected, {{"order_id", "Order ID"}, {"customer_id", "Customer ID"}, {"customer_unique_id", "Customer Unique ID"}, {"order_status", "Order Status"}, {"purchase_ts", "Purchase Timestamp"}, {"approved_ts", "Approved Timestamp"}, {"carrier_handoff_ts", "Carrier Handoff Timestamp"}, {"delivered_ts", "Delivered Timestamp"}, {"estimated_delivery_date", "Estimated Delivery Date"}, {"purchase_date", "Purchase Date"}, {"delivery_days", "Delivery Days"}, {"days_vs_estimate", "Days vs Estimate"}, {"delivery_status", "Delivery Status"}, {"is_late", "Is Late"}, {"customer_order_seq", "Customer Order Seq"}, {"customer_type", "Customer Type"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Order ID", type text}, {"Customer ID", type text}, {"Customer Unique ID", type text}, {"Order Status", type text}, {"Purchase Timestamp", type datetime}, {"Approved Timestamp", type datetime}, {"Carrier Handoff Timestamp", type datetime}, {"Delivered Timestamp", type datetime}, {"Estimated Delivery Date", type date}, {"Purchase Date", type date}, {"Delivery Days", type number}, {"Days vs Estimate", Int64.Type}, {"Delivery Status", type text}, {"Is Late", type logical}, {"Customer Order Seq", Int64.Type}, {"Customer Type", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,87 @@
+/// Fact table: one row per item in an order (dw.fact_order_items). Grain for revenue.
+table 'Order Items'
+	lineageTag: 797fb920-bec5-50f4-bdce-f7ffcd8b94b3
+
+	column 'Order ID'
+		dataType: string
+		isHidden
+		lineageTag: 4441714b-2dc4-5d91-a6d3-6917f066bbf6
+		summarizeBy: none
+		sourceColumn: Order ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Item Seq'
+		dataType: int64
+		lineageTag: 4d4305d8-9d9d-5473-856b-8a24e8eba05f
+		summarizeBy: none
+		sourceColumn: Order Item Seq
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product ID'
+		dataType: string
+		isHidden
+		lineageTag: f6c85a8a-c8ef-56f3-8bda-efd3e8ef65a2
+		summarizeBy: none
+		sourceColumn: Product ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Seller ID'
+		dataType: string
+		isHidden
+		lineageTag: ea7da993-d751-5dd4-9ebb-2cd31ad9b07b
+		summarizeBy: none
+		sourceColumn: Seller ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Shipping Limit Timestamp'
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn
+		lineageTag: 3924a434-cf05-5618-99eb-e719af72fd55
+		summarizeBy: none
+		sourceColumn: Shipping Limit Timestamp
+
+		annotation SummarizationSetBy = Automatic
+
+	column Price
+		dataType: decimal
+		formatString: \R$#,0.00
+		lineageTag: 54e3da26-06e0-5a92-a4be-7d8dd526e3a7
+		summarizeBy: sum
+		sourceColumn: Price
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Freight Value'
+		dataType: decimal
+		formatString: \R$#,0.00
+		lineageTag: c3d7b422-29f1-54e4-b0af-ebfc445e7b1e
+		summarizeBy: sum
+		sourceColumn: Freight Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item Total'
+		dataType: decimal
+		formatString: \R$#,0.00
+		lineageTag: 844ee391-be37-510e-970f-9fd2463627d5
+		summarizeBy: sum
+		sourceColumn: Item Total
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Order Items' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "fact_order_items"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"order_id", "order_item_seq", "product_id", "seller_id", "shipping_limit_ts", "price", "freight_value", "item_total"}),
+				    Renamed = Table.RenameColumns(Selected, {{"order_id", "Order ID"}, {"order_item_seq", "Order Item Seq"}, {"product_id", "Product ID"}, {"seller_id", "Seller ID"}, {"shipping_limit_ts", "Shipping Limit Timestamp"}, {"price", "Price"}, {"freight_value", "Freight Value"}, {"item_total", "Item Total"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Order ID", type text}, {"Order Item Seq", Int64.Type}, {"Product ID", type text}, {"Seller ID", type text}, {"Shipping Limit Timestamp", type datetime}, {"Price", Currency.Type}, {"Freight Value", Currency.Type}, {"Item Total", Currency.Type}})
+				in
+				    Typed
+

@@ -1,0 +1,78 @@
+/// Marketplace sellers (dw.dim_seller).
+table Sellers
+	lineageTag: f9bef615-16a8-5af1-9c8f-fa227a0e676c
+
+	column 'Seller ID'
+		dataType: string
+		isKey
+		lineageTag: 81c75819-31eb-5526-99e3-c5984dc100fd
+		summarizeBy: none
+		sourceColumn: Seller ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Zip Code Prefix'
+		dataType: string
+		lineageTag: cb33b1dc-1af4-57bd-b36b-1389b94a76c4
+		dataCategory: PostalCode
+		summarizeBy: none
+		sourceColumn: Zip Code Prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: 1b408ac4-2f26-59ec-ac8e-0d201bf8576a
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: fea532a9-d6ac-58a7-8f6f-7cf9745a56d0
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: a8465a64-870a-5439-a48e-4e741a0a7924
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Latitude
+		dataType: double
+		lineageTag: dd082964-19a3-5b68-a7a2-39e67eff3499
+		dataCategory: Latitude
+		summarizeBy: none
+		sourceColumn: Latitude
+
+		annotation SummarizationSetBy = Automatic
+
+	column Longitude
+		dataType: double
+		lineageTag: 5aabe61e-e9be-5af2-a63f-f49e727e126c
+		dataCategory: Longitude
+		summarizeBy: none
+		sourceColumn: Longitude
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Sellers = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "dim_seller"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"seller_id", "zip_code_prefix", "city", "state", "region", "latitude", "longitude"}),
+				    Renamed = Table.RenameColumns(Selected, {{"seller_id", "Seller ID"}, {"zip_code_prefix", "Zip Code Prefix"}, {"city", "City"}, {"state", "State"}, {"region", "Region"}, {"latitude", "Latitude"}, {"longitude", "Longitude"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Seller ID", type text}, {"Zip Code Prefix", type text}, {"City", type text}, {"State", type text}, {"Region", type text}, {"Latitude", type number}, {"Longitude", type number}})
+				in
+				    Typed
+

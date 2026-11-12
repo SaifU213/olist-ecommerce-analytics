@@ -1,0 +1,104 @@
+/// RFM segment per customer (analytics.customer_rfm).
+table 'Customer Segments'
+	lineageTag: 6105733d-72e4-5eb7-a6de-446ecb7096ba
+
+	column 'Customer Unique ID'
+		dataType: string
+		isKey
+		lineageTag: 19dc0911-469a-5b83-9a39-8f8e28082c9d
+		summarizeBy: none
+		sourceColumn: Customer Unique ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'First Purchase Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: e2f4849e-fafc-512a-9bf8-d17cb98406b4
+		summarizeBy: none
+		sourceColumn: First Purchase Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Last Purchase Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 8bd8259c-039b-514c-bb5b-4650a3be814a
+		summarizeBy: none
+		sourceColumn: Last Purchase Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Recency Days'
+		dataType: int64
+		lineageTag: 3c26dbc9-306e-532b-b7e7-b9091c53d197
+		summarizeBy: average
+		sourceColumn: Recency Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column Frequency
+		dataType: int64
+		lineageTag: 40abbf70-d9b5-5488-a240-f1854b24b0bb
+		summarizeBy: average
+		sourceColumn: Frequency
+
+		annotation SummarizationSetBy = Automatic
+
+	column Monetary
+		dataType: decimal
+		formatString: \R$#,0.00
+		lineageTag: 64514ba8-f883-5e48-a546-e823bc45e149
+		summarizeBy: sum
+		sourceColumn: Monetary
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'R Score'
+		dataType: int64
+		lineageTag: caf1eb13-da9d-57b8-a6cf-ff6397bcce2b
+		summarizeBy: none
+		sourceColumn: R Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'F Score'
+		dataType: int64
+		lineageTag: b34d3581-e3a9-54ac-a789-df27c7bc01d7
+		summarizeBy: none
+		sourceColumn: F Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'M Score'
+		dataType: int64
+		lineageTag: bc8b819f-5930-5531-add2-b8065a2f93f5
+		summarizeBy: none
+		sourceColumn: M Score
+
+		annotation SummarizationSetBy = Automatic
+
+	column Segment
+		dataType: string
+		lineageTag: 4eae8a3a-4b57-501b-b18e-580e3a4e8b99
+		summarizeBy: none
+		sourceColumn: Segment
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Customer Segments' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "analytics", Item = "customer_rfm"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"customer_unique_id", "first_purchase_date", "last_purchase_date", "recency_days", "frequency", "monetary", "r_score", "f_score", "m_score", "segment"}),
+				    Renamed = Table.RenameColumns(Selected, {{"customer_unique_id", "Customer Unique ID"}, {"first_purchase_date", "First Purchase Date"}, {"last_purchase_date", "Last Purchase Date"}, {"recency_days", "Recency Days"}, {"frequency", "Frequency"}, {"monetary", "Monetary"}, {"r_score", "R Score"}, {"f_score", "F Score"}, {"m_score", "M Score"}, {"segment", "Segment"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Customer Unique ID", type text}, {"First Purchase Date", type date}, {"Last Purchase Date", type date}, {"Recency Days", Int64.Type}, {"Frequency", Int64.Type}, {"Monetary", Currency.Type}, {"R Score", Int64.Type}, {"F Score", Int64.Type}, {"M Score", Int64.Type}, {"Segment", type text}})
+				in
+				    Typed
+

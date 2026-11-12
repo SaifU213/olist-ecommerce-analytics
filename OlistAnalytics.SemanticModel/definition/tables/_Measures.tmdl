@@ -1,0 +1,219 @@
+/// Home table for all report measures.
+table _Measures
+	lineageTag: 6ca3ff6b-3121-5035-a14e-a90a093d0e61
+
+	/// Sum of item prices (excl. freight) for orders that were not canceled/unavailable.
+	measure Revenue = CALCULATE ( SUM ( 'Order Items'[Price] ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: \R$#,0
+		displayFolder: Sales
+		lineageTag: c3032c07-25e3-5c8e-abc2-39ea01ed08ac
+
+	/// Freight charged on valid orders.
+	measure Freight = CALCULATE ( SUM ( 'Order Items'[Freight Value] ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: \R$#,0
+		displayFolder: Sales
+		lineageTag: 95e25d68-d265-55e3-90f7-664e27e22eaf
+
+	/// Gross merchandise value = revenue + freight.
+	measure GMV = [Revenue] + [Freight]
+		formatString: \R$#,0
+		displayFolder: Sales
+		lineageTag: d817aa5d-c188-50a9-bfea-d4692479288a
+
+	/// Distinct valid orders that contain at least one item.
+	measure 'Total Orders' = CALCULATE ( DISTINCTCOUNT ( 'Order Items'[Order ID] ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 5254ced2-0476-5e15-aadb-43b768cf4452
+
+	measure 'Items Sold' = CALCULATE ( COUNTROWS ( 'Order Items' ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 32f11c7a-edb1-51c9-9684-cd88564279d3
+
+	measure 'Avg Order Value' = DIVIDE ( [Revenue], [Total Orders] )
+		formatString: \R$#,0.00
+		displayFolder: Sales
+		lineageTag: 2d847917-9288-5757-a529-74ea702abb43
+
+	measure 'Avg Item Price' = DIVIDE ( [Revenue], [Items Sold] )
+		formatString: \R$#,0.00
+		displayFolder: Sales
+		lineageTag: ce32beae-36fc-55e0-85cb-00e452d651cd
+
+	measure 'Freight % of Revenue' = DIVIDE ( [Freight], [Revenue] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: d8571a7c-4187-577b-bb1b-ada3f018849d
+
+	measure 'Revenue LY' = CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+		formatString: \R$#,0
+		displayFolder: Sales
+		lineageTag: a2024930-e3f1-5392-886d-d7398cfca5ae
+
+	measure 'Revenue YoY %' = DIVIDE ( [Revenue] - [Revenue LY], [Revenue LY] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 59e1b084-c359-5dbf-b672-a10ac42ff265
+
+	/// Amount paid by customers, including freight.
+	measure 'Total Payments' = CALCULATE ( SUM ( Payments[Payment Value] ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: \R$#,0
+		displayFolder: Sales
+		lineageTag: c4042fad-55d2-52c1-ad46-eb69727a7a9a
+
+	/// All orders regardless of status.
+	measure 'All Orders' = DISTINCTCOUNT ( Orders[Order ID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 7c45d6de-37fd-50c7-b65a-c15b332b4357
+
+	measure 'Cancellation Rate' = DIVIDE ( CALCULATE ( [All Orders], KEEPFILTERS ( Orders[Order Status] IN { "Canceled", "Unavailable" } ) ), [All Orders] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: cd2d38c3-9be8-5f42-91b6-2cd72fd2f590
+
+	measure 'Products Sold' = CALCULATE ( DISTINCTCOUNT ( 'Order Items'[Product ID] ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: #,0
+		displayFolder: Products & Sellers
+		lineageTag: ba700c95-0f11-5114-aec6-636fa43141f8
+
+	measure 'Active Sellers' = CALCULATE ( DISTINCTCOUNT ( 'Order Items'[Seller ID] ), KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ) )
+		formatString: #,0
+		displayFolder: Products & Sellers
+		lineageTag: 3fb582fd-b2e7-5db6-9e22-2979c48b5c74
+
+	/// Distinct real customers (customer_unique_id) with a valid order that contains items (same orders as [Total Orders]).
+	measure 'Total Customers' =
+			CALCULATE (
+			    DISTINCTCOUNT ( Orders[Customer Unique ID] ),
+			    KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ),
+			    CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ),
+			    'Order Items'
+			)
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 88aa3b87-cfd8-557f-a6fb-ecd8da663165
+
+	/// Customers with more than one valid order in the current filter context.
+	measure 'Repeat Customers' =
+			CALCULATE (
+			    COUNTROWS (
+			        FILTER ( VALUES ( Orders[Customer Unique ID] ), CALCULATE ( DISTINCTCOUNT ( Orders[Order ID] ) ) > 1 )
+			    ),
+			    KEEPFILTERS ( NOT Orders[Order Status] IN { "Canceled", "Unavailable" } ),
+			    CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ),
+			    'Order Items'
+			)
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 6aa18e7f-3509-5eb0-8aaa-2e5492685070
+
+	measure 'Repeat Customer Rate' = DIVIDE ( [Repeat Customers], [Total Customers] )
+		formatString: 0.0%
+		displayFolder: Customers
+		lineageTag: e4158ed9-59eb-5853-930a-46bc810a2692
+
+	measure 'Revenue per Customer' = DIVIDE ( [Revenue], [Total Customers] )
+		formatString: \R$#,0.00
+		displayFolder: Customers
+		lineageTag: 4ff92691-703b-5e01-a298-bda5797b4b19
+
+	measure 'New Customer Orders' = CALCULATE ( [Total Orders], Orders[Customer Type] = "New" )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: ecde7e05-fd9b-5dd0-9012-aaea1c03e6f5
+
+	measure 'Returning Customer Orders' = CALCULATE ( [Total Orders], Orders[Customer Type] = "Returning" )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: dde2e68e-f53e-54f9-9393-9abd2ad06777
+
+	measure 'Delivered Orders' = CALCULATE ( COUNTROWS ( Orders ), KEEPFILTERS ( Orders[Delivery Status] <> "Not Delivered" ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: #,0
+		displayFolder: Delivery
+		lineageTag: f7183b0e-7277-543c-a6c3-ba60ba62542e
+
+	/// Delivered after the estimated delivery date.
+	measure 'Late Deliveries' = CALCULATE ( COUNTROWS ( Orders ), KEEPFILTERS ( Orders[Delivery Status] = "Late" ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: #,0
+		displayFolder: Delivery
+		lineageTag: 5722a09f-0f13-51c5-970e-397d4db40826
+
+	measure 'On-Time Delivery %' = DIVIDE ( [Delivered Orders] - [Late Deliveries], [Delivered Orders] )
+		formatString: 0.0%
+		displayFolder: Delivery
+		lineageTag: 71a293e5-ed42-58dd-ad19-21a0146047ab
+
+	/// Purchase to customer delivery, in days.
+	measure 'Avg Delivery Days' = CALCULATE ( AVERAGE ( Orders[Delivery Days] ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: 0.0
+		displayFolder: Delivery
+		lineageTag: 19989343-4766-51f7-a988-01e00c41f5bb
+
+	/// Negative = delivered earlier than promised.
+	measure 'Avg Days vs Estimate' = CALCULATE ( AVERAGE ( Orders[Days vs Estimate] ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: +0.0;-0.0;0.0
+		displayFolder: Delivery
+		lineageTag: 4091acb6-fa62-5243-8bdd-3b0268375878
+
+	measure 'Review Count' = CALCULATE ( COUNTROWS ( Reviews ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: #,0
+		displayFolder: Reviews
+		lineageTag: 3415cad5-8a58-5555-a4eb-0d5831d2bb92
+
+	measure 'Avg Review Score' = CALCULATE ( AVERAGE ( Reviews[Review Score] ), CROSSFILTER ( 'Order Items'[Order ID], Orders[Order ID], BOTH ) )
+		formatString: 0.00
+		displayFolder: Reviews
+		lineageTag: 0f528e95-ee2f-5bc4-a09d-b623869fa1c7
+
+	measure '5-Star Review %' = DIVIDE ( CALCULATE ( [Review Count], Reviews[Review Score] = 5 ), [Review Count] )
+		formatString: 0.0%
+		displayFolder: Reviews
+		lineageTag: 9ac4a48e-3ab9-5d33-b6f8-b29188924fb9
+
+	/// Share of 1-2 star reviews.
+	measure 'Negative Review %' = DIVIDE ( CALCULATE ( [Review Count], Reviews[Review Score] <= 2 ), [Review Count] )
+		formatString: 0.0%
+		displayFolder: Reviews
+		lineageTag: 6ef6674d-7c56-5ed0-b38a-c88228a4fe27
+
+	/// Share of a cohort that bought again N months after their first purchase. Weighted across cohorts at total level.
+	measure 'Retention %' = DIVIDE ( SUM ( 'Cohort Retention'[Active Customers] ), SUM ( 'Cohort Retention'[Cohort Size] ) )
+		formatString: 0.00%
+		displayFolder: Retention
+		lineageTag: 312c2e6d-d72a-555f-850a-7485257a4ae8
+
+	measure 'Month-1 Retention %' = CALCULATE ( [Retention %], 'Cohort Retention'[Months Since First] = 1 )
+		formatString: 0.00%
+		displayFolder: Retention
+		lineageTag: 99850af0-9701-5cb5-b9ab-ff345490e253
+
+	measure 'Segment Customers' = COUNTROWS ( 'Customer Segments' )
+		formatString: #,0
+		displayFolder: Retention
+		lineageTag: 51d09433-669c-5c4a-9509-50012340abd7
+
+	/// Average lifetime revenue per customer (RFM monetary).
+	measure 'Avg Customer Spend' = AVERAGE ( 'Customer Segments'[Monetary] )
+		formatString: \R$#,0.00
+		displayFolder: Retention
+		lineageTag: f0b4be8f-37e2-5b38-b81b-21b4ac5b3e8a
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 7f2af800-0650-5874-89c1-61c9b07fc8f2
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+

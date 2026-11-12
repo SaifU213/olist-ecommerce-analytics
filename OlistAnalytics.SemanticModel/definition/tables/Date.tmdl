@@ -1,0 +1,100 @@
+/// Calendar 2016-2018 (dw.dim_date).
+table Date
+	lineageTag: 3ccf1846-024f-563c-8896-ba90821b1de9
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 2ee8190c-bbc2-58ac-bf48-da95ae3f48e9
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		lineageTag: 66a5d656-eecd-5584-89e3-90d4fe5c814b
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: 584d3bee-9f2c-529f-a10b-f47a4812a654
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		lineageTag: 5b9eeba9-4b4a-5350-ac6f-09219468d291
+		summarizeBy: none
+		sourceColumn: Month Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: b2ecb88a-8f6e-5c97-8e3c-092d465dede2
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Number'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Month'
+		dataType: string
+		lineageTag: b45ae46c-775c-5fdd-9d08-18e12b1fbc26
+		summarizeBy: none
+		sourceColumn: Year Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Start'
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 0c73dd5e-eb0f-5eef-91c4-2d7d0eacb128
+		summarizeBy: none
+		sourceColumn: Month Start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Weekday Number'
+		dataType: int64
+		isHidden
+		lineageTag: 775433c5-db3c-5efe-aab7-209b9cf6035f
+		summarizeBy: none
+		sourceColumn: Weekday Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weekday
+		dataType: string
+		lineageTag: 9d6fb9db-ce8d-54bd-a2ab-799aff93b7b9
+		summarizeBy: none
+		sourceColumn: Weekday
+		sortByColumn: 'Weekday Number'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database(PgServer, PgDatabase),
+				    Data = Source{[Schema = "dw", Item = "dim_date"]}[Data],
+				    Selected = Table.SelectColumns(Data, {"date_key", "year", "quarter", "month_number", "month_name", "year_month", "month_start", "weekday_number", "weekday_name"}),
+				    Renamed = Table.RenameColumns(Selected, {{"date_key", "Date"}, {"year", "Year"}, {"quarter", "Quarter"}, {"month_number", "Month Number"}, {"month_name", "Month"}, {"year_month", "Year Month"}, {"month_start", "Month Start"}, {"weekday_number", "Weekday Number"}, {"weekday_name", "Weekday"}}),
+				    Typed = Table.TransformColumnTypes(Renamed, {{"Date", type date}, {"Year", Int64.Type}, {"Quarter", type text}, {"Month Number", Int64.Type}, {"Month", type text}, {"Year Month", type text}, {"Month Start", type date}, {"Weekday Number", Int64.Type}, {"Weekday", type text}})
+				in
+				    Typed
+

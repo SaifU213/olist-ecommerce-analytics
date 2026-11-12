@@ -1,0 +1,13 @@
+# ETL
+psycopg[binary]==3.2.3
+# Analysis notebook
+pandas==2.2.3
+SQLAlchemy==2.0.36
+scipy==1.14.1
+statsmodels==0.14.4
+matplotlib==3.9.2
+jupyter==1.1.1
+# Tests
+pytest==8.3.3
+# Docs: render the Power BI PDF export to PNG screenshots
+pypdfium2==4.30.0
